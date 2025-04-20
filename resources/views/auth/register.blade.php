@@ -621,7 +621,7 @@
         <div class="register-wrapper">
             <div class="content-container">
                 <!-- Theme toggle -->
-                <div class="theme-toggle" id="theme-toggle">
+                <div class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
                     <div class="theme-toggle-button"></div>
                     <div class="theme-toggle-icon moon-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -642,82 +642,92 @@
                         </svg>
                     </div>
                 </div>
-                
-                <div class="element-copy">
-                    <!-- Background color now handled by the CSS -->
-                </div>
-                
+
                 <div class="boys-illustration">
                     <img src="{{ asset('images/boyss.png') }}" alt="Boys illustration">
                 </div>
-                
-                <div class="left-panel"></div>
-                
+
                 <div class="register-form-container">
-                    <form method="POST" action="{{ route('register.post') }}" class="form-content">
+                    <form method="POST" action="{{ route('register.post') }}">
                         @csrf
-                        <div class="form-top">
-                            <div class="form-title">
-                                <div class="title-text">Register</div>
-                                <div class="subtitle-text">Create your account</div>
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
                             </div>
-                            
-                            <div class="form-fields">
-                                <div class="field-container">
-                                    <div class="field-label">Full Name</div>
-                                    <input type="text" name="name" class="field-input" value="{{ old('name') }}" required>
-                                    @error('name')
-                                        <span class="error-message">{{ $message }}</span>
-                                    @enderror
+                        @endif
+                        @if (session('status'))
+                            <div class="alert alert-success">
+                                {{ session('status') }}
+                            </div>
+                        @endif
+                        <div class="form-content">
+                            <div class="form-top">
+                                <div class="form-title">
+                                    <div class="title-text">Register</div>
+                                    <div class="subtitle-text">Create your account</div>
                                 </div>
-                                
-                                <div class="field-container">
-                                    <div class="field-label">Email</div>
-                                    <input type="email" name="email" class="field-input" value="{{ old('email') }}" required>
-                                    @error('email')
-                                        <span class="error-message">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                                
-                                <div class="field-container">
-                                    <div class="password-field-header">
-                                        <div class="field-label">Password</div>
-                                        <button type="button" id="togglePassword" class="toggle-password">
-                                            <img class="eye-icon" alt="Eye slash fill" src="{{ asset('images/eye-slash-fill.svg') }}">
-                                        </button>
+
+                                <div class="form-fields">
+                                    <div class="field-container">
+                                        <label for="name" class="field-label">Full Name</label>
+                                        <input type="text" id="name" name="name" class="field-input" value="{{ old('name') }}" required>
+                                        @error('name')
+                                            <span class="error-message">{{ $message }}</span>
+                                        @enderror
                                     </div>
-                                    <input type="password" name="password" id="password" class="field-input" required>
-                                    @error('password')
-                                        <span class="error-message">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                                
-                                <div class="field-container">
-                                    <div class="password-field-header">
-                                        <div class="field-label">Confirm Password</div>
-                                        <button type="button" id="toggleConfirmPassword" class="toggle-password">
-                                            <img class="eye-icon" alt="Eye slash fill" src="{{ asset('images/eye-slash-fill.svg') }}">
-                                        </button>
+
+                                    <div class="field-container">
+                                        <label for="email" class="field-label">Email</label>
+                                        <input type="email" id="email" name="email" class="field-input" value="{{ old('email') }}" required>
+                                        @error('email')
+                                            <span class="error-message">{{ $message }}</span>
+                                        @enderror
                                     </div>
-                                    <input type="password" name="password_confirmation" id="password_confirmation" class="field-input" required>
+
+                                    <div class="field-container">
+                                        <div class="password-field-header">
+                                            <label for="password" class="field-label">Password</label>
+                                            <button type="button" id="togglePassword" class="toggle-password" aria-label="Toggle password visibility">
+                                                <img class="eye-icon" alt="Toggle password visibility" src="{{ asset('images/eye-slash-fill.svg') }}">
+                                            </button>
+                                        </div>
+                                        <input type="password" id="password" name="password" class="field-input" required>
+                                        @error('password')
+                                            <span class="error-message">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="field-container">
+                                        <div class="password-field-header">
+                                            <label for="password_confirmation" class="field-label">Confirm Password</label>
+                                            <button type="button" id="toggleConfirmPassword" class="toggle-password" aria-label="Toggle confirm password visibility">
+                                                <img class="eye-icon" alt="Toggle confirm password visibility" src="{{ asset('images/eye-slash-fill.svg') }}">
+                                            </button>
+                                        </div>
+                                        <input type="password" id="password_confirmation" name="password_confirmation" class="field-input" required>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <button type="submit" class="register-button">
                             <div class="button-text">Register</div>
                         </button>
                     </form>
                 </div>
-                
+
                 <div class="welcome-container">
                     <p class="welcome-title">
                         <span class="welcome-bold">Welcome to <br></span>
-                        <span class="welcome-regular">student portal</span>
+                        <span class="welcome-regular">Student Portal</span>
                     </p>
                     <p class="welcome-subtitle">Create an account to get started</p>
                 </div>
-                
+
                 <div class="login-container">
                     <div class="login-text">Already have an account?</div>
                     <a href="{{ route('login') }}" class="login-button">

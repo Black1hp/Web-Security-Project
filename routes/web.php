@@ -7,24 +7,22 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
-    return redirect('/login');
+    return view('welcome');
 });
 
 // Auth routes
 Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login.post');
 Route::get('/register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'register'])->name('register.post');
+Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'doRegister'])->name('register.post');
+Route::get('/verify', [App\Http\Controllers\Auth\RegisterController::class, 'verify'])->name('verify');
 Route::get('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 
 // Password reset routes
-Route::get('/password/reset', function () {
-    return view('auth.passwords.email');
-})->name('password.request');
-
-Route::post('/password/email', function () {
-    return back()->with('status', 'Password reset link would be sent here.');
-})->name('password.email');
+Route::get('/password/forgot', [App\Http\Controllers\Auth\RegisterController::class, 'showForgotForm'])->name('password.forgot');
+Route::post('/password/email', [App\Http\Controllers\Auth\RegisterController::class, 'sendResetLink'])->name('password.email');
+Route::get('/password/reset', [App\Http\Controllers\Auth\RegisterController::class, 'showResetLink'])->name('ShowRestForm');
+Route::post('/password/reset', [App\Http\Controllers\Auth\RegisterController::class, 'resetPassword'])->name('password.update');
 
 // Protected routes that require authentication
 Route::middleware(['auth'])->group(function () {
