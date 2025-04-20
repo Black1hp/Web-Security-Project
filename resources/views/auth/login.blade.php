@@ -663,6 +663,21 @@
                 
                 <div class="login-form-container">
                     <form method="POST" action="{{ route('login.post') }}" class="form-content">
+    @csrf
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    @if (session('status'))
+        <div class="alert alert-success">
+            {{ session('status') }}
+        </div>
+    @endif
                         @csrf
                         <div class="form-top">
                             <div class="form-title">
@@ -694,7 +709,7 @@
                             </div>
                         </div>
                         
-                        <a href="{{ route('password.request') }}" class="forgot-password">Forgot Password?</a>
+                        <a href="{{ route('password.forgot') }}" class="forgot-password">Forgot Password?</a>
                         
                         <button type="submit" class="login-button">
                             <div class="button-text">Login</div>
