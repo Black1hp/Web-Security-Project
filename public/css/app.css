@@ -1,0 +1,61 @@
+/* Basic styles for authentication pages */
+:root {
+  --black: rgba(0, 0, 0, 1);
+  --darkpurple: rgba(120, 72, 199, 1);
+  --descedent: rgba(32, 32, 32, 1);
+  --purple: rgba(146, 95, 226, 1);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', Helvetica, Arial, sans-serif;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.bg-purple {
+  background-color: var(--purple);
+}
+
+.bg-dark {
+  background-color: #1c1d21;
+}
+
+.text-white {
+  color: white;
+}
+
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.text-red-500 {
+  color: #ef4444;
+} 
