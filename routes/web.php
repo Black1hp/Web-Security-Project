@@ -20,9 +20,10 @@ Route::get('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout
 
 // Password reset routes
 Route::get('/password/forgot', [App\Http\Controllers\Auth\RegisterController::class, 'showForgotForm'])->name('password.forgot');
-Route::post('/password/email', [App\Http\Controllers\Auth\RegisterController::class, 'sendResetLink'])->name('password.email');
+Route::post('/password/email', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:5,1')->name('password.email');
 Route::get('/password/reset', [App\Http\Controllers\Auth\RegisterController::class, 'showResetLink'])->name('ShowRestForm');
-Route::post('/password/reset', [App\Http\Controllers\Auth\RegisterController::class, 'resetPassword'])->name('password.update');
+Route::get('/password/reset/{token}', [App\Http\Controllers\Auth\RegisterController::class, 'showResetLink'])->name('password.reset');
+Route::post('/password/reset', [App\Http\Controllers\Auth\RegisterController::class, 'resetPassword'])->middleware('throttle:5,1')->name('password.update');
 
 // Protected routes that require authentication
 Route::middleware(['auth'])->group(function () {

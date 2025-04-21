@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -14,7 +16,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use App\Mail\VerificationEmail;
 use App\Mail\ForgetPassEmail;
-
 class RegisterController extends Controller
 {
     // Advanced registration with verification
@@ -24,6 +25,15 @@ class RegisterController extends Controller
     }
 
     public function doRegister(Request $request) {
+    $key = 'register|' . \Str::lower($request->input('email')) . '|' . $request->ip();
+    // \Log::info('RateLimiter count', [
+    //     'key' => $key,
+    //     'attempts' => \RateLimiter::attempts($key)
+    // ]);
+    if (\RateLimiter::tooManyAttempts($key, 5)) {
+        return back()->withErrors(['email' => 'Too many registration attempts. Please try again in 1 minute.']);
+    }
+    \RateLimiter::hit($key, 60);
         try {
             $request->validate([
                 'name' => ['required', 'string', 'min:5'],
@@ -75,7 +85,13 @@ class RegisterController extends Controller
         return view('auth.forgot-password');
     }
 
+    
     public function sendResetLink(Request $request) {
+    $key = \Str::lower($request->input('email')) . '|' . $request->ip();
+    if (\RateLimiter::tooManyAttempts($key, 5)) {
+        return back()->withErrors(['email' => 'Too many reset attempts. Please try again in 1 minute.']);
+    }
+    \RateLimiter::hit($key, 60);
         $request->validate([
             'email' => ['required', 'email'],
         ]);
