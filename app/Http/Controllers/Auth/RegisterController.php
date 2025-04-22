@@ -16,6 +16,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use App\Mail\VerificationEmail;
 use App\Mail\ForgetPassEmail;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 class RegisterController extends Controller
 {
     // Advanced registration with verification
@@ -39,9 +41,25 @@ class RegisterController extends Controller
                 'name' => ['required', 'string', 'min:5'],
                 'email' => ['required', 'email', 'unique:users'],
                 'password' => ['required', 'confirmed', PasswordRule::min(8)->numbers()->letters()->mixedCase()->symbols()],
+                'cf-turnstile-response' => ['required'],
             ]);
+            
+            // Verify Cloudflare Turnstile
+            $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+            
+            if (!$turnstileResponse['success']) {
+                Log::error('Turnstile verification failed', [
+                    'errors' => $turnstileResponse['error-codes'] ?? 'Unknown error',
+                    'ip' => $request->ip()
+                ]);
+                return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
+                                       ->withErrors(['captcha' => 'CAPTCHA verification failed. Please try again.']);
+            }
+            
         } catch(\Exception $e) {
-            return redirect()->back()->withInput($request->input())->withErrors('Invalid registration information.');
+            Log::error('Registration validation error', ['error' => $e->getMessage()]);
+            return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
+                                   ->withErrors('Invalid registration information.');
         }
         $user = new User();
         $user->name = $request->name;
@@ -53,7 +71,7 @@ class RegisterController extends Controller
         $token = Crypt::encryptString(json_encode(['id' => $user->id, 'email' => $user->email]));
         $link = route("verify", ['token' => $token]);
         Mail::to($user->email)->send(new VerificationEmail($link, $user->name));
-        return redirect('/');
+        return redirect('/')->with('status', 'Registration successful! Please check your email to verify your account.');
     }
 
     public function verify(Request $request) {
@@ -129,5 +147,47 @@ class RegisterController extends Controller
         $user->password = bcrypt($request->password); 
         $user->save();
         return redirect()->route('login')->with('status', 'Password reset successfully.');
+    }
+
+    /**
+     * Verify Cloudflare Turnstile token
+     *
+     * @param string $token The token from the CAPTCHA
+     * @param string $ip The user's IP address
+     * @return array The response from Cloudflare
+     */
+    private function verifyTurnstile($token, $ip)
+    {
+        try {
+            // Log the verification attempt for debugging
+            Log::info('Attempting Turnstile verification', [
+                'ip' => $ip,
+                'token_length' => strlen($token),
+                'secret_key' => substr(env('CF_TURNSTILE_SECRET'), 0, 5) . '...' // Log only first few chars for security
+            ]);
+            
+            $response = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                'secret' => env('CF_TURNSTILE_SECRET'),
+                'response' => $token,
+                'remoteip' => $ip
+            ]);
+            
+            $result = $response->json();
+            
+            // Log the result
+            if (!isset($result['success']) || $result['success'] !== true) {
+                Log::warning('Turnstile verification failed', [
+                    'response' => $result,
+                    'ip' => $ip
+                ]);
+            } else {
+                Log::info('Turnstile verification successful');
+            }
+            
+            return $result;
+        } catch (\Exception $e) {
+            Log::error('Turnstile verification exception', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return ['success' => false, 'error-codes' => ['connection_error']];
+        }
     }
 } 

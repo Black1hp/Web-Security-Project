@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Student Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         :root {
             /* Light mode colors */
@@ -37,12 +38,12 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
-            outline: none;
         }
         
-        /* Remove any focus outlines that might show blue */
-        *:focus {
-            outline: none;
+        /* Custom focus style for accessibility */
+        input:focus, button:focus, select:focus, textarea:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
         }
         
         /* Improve the appearance of form elements */
@@ -445,6 +446,41 @@
             margin-top: 4px;
         }
         
+        /* Captcha overlay styles */
+        .captcha-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .captcha-container {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 450px;
+            width: 90%;
+        }
+        
+        .captcha-title {
+            margin-bottom: 20px;
+            color: var(--text-color);
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+        }
+        
         .theme-toggle {
             position: absolute;
             top: 30px;
@@ -648,7 +684,7 @@
                 </div>
 
                 <div class="register-form-container">
-                    <form method="POST" action="{{ route('register.post') }}">
+                    <form method="POST" action="{{ route('register.post') }}" id="register-form">
                         @csrf
                         @if ($errors->any())
                             <div class="alert alert-danger">
@@ -710,11 +746,17 @@
                                         </div>
                                         <input type="password" id="password_confirmation" name="password_confirmation" class="field-input" required>
                                     </div>
+                                    
+                                    <!-- Hidden Turnstile token field -->
+                                    <input type="hidden" name="cf-turnstile-response" id="cf-turnstile-response">
+                                    @error('captcha')
+                                        <span class="error-message">{{ $message }}</span>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
 
-                        <button type="submit" class="register-button">
+                        <button type="button" id="pre-submit-button" class="register-button">
                             <div class="button-text">Register</div>
                         </button>
                     </form>
@@ -738,7 +780,49 @@
         </div>
     </div>
 
+    <!-- Captcha Overlay -->
+    <div class="captcha-overlay" id="captcha-overlay">
+        <div class="captcha-container">
+            <div class="captcha-title">Please verify you're human</div>
+            <div class="cf-turnstile" id="cf-turnstile-widget" data-sitekey="{{ env('TURNSTILE_SITE_KEY') }}" data-callback="turnstileCallback" data-theme="dark"></div>
+        </div>
+    </div>
+
     <script>
+        // Cloudflare Turnstile callback
+        function turnstileCallback(token) {
+            console.log('Turnstile callback received token:', token);
+            document.getElementById('cf-turnstile-response').value = token;
+            // Hide overlay after verification
+            setTimeout(function() {
+                document.getElementById('captcha-overlay').style.display = 'none';
+                // Submit the form automatically after verification
+                document.getElementById('register-form').submit();
+            }, 500);
+        }
+        
+        // Pre-submit button click handler
+        document.getElementById('pre-submit-button').addEventListener('click', function() {
+            // Show the captcha overlay
+            const overlay = document.getElementById('captcha-overlay');
+            overlay.style.display = 'flex';
+            
+            // Ensure the Turnstile widget is reset if it was previously loaded
+            if (typeof turnstile !== 'undefined') {
+                turnstile.reset();
+            }
+        });
+        
+        // Listen for form submission to ensure CAPTCHA is validated
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            const token = document.getElementById('cf-turnstile-response').value;
+            if (!token) {
+                e.preventDefault();
+                alert('Please complete the CAPTCHA verification');
+                document.getElementById('captcha-overlay').style.display = 'flex';
+            }
+        });
+
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
