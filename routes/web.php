@@ -5,25 +5,32 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\StudentsController;
+
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+
+// Student routes
+Route::resource('students', StudentsController::class);
+
+
 // Auth routes
-Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login.post');
-Route::get('/register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'doRegister'])->name('register.post');
-Route::get('/verify', [App\Http\Controllers\Auth\RegisterController::class, 'verify'])->name('verify');
-Route::get('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [RegisterController::class, 'doRegister'])->name('register.post');
+Route::get('/verify', [RegisterController::class, 'verify'])->name('verify');
+Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Password reset routes
-Route::get('/password/forgot', [App\Http\Controllers\Auth\RegisterController::class, 'showForgotForm'])->name('password.forgot');
-Route::post('/password/email', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:5,1')->name('password.email');
-Route::get('/password/reset', [App\Http\Controllers\Auth\RegisterController::class, 'showResetLink'])->name('ShowRestForm');
-Route::get('/password/reset/{token}', [App\Http\Controllers\Auth\RegisterController::class, 'showResetLink'])->name('password.reset');
-Route::post('/password/reset', [App\Http\Controllers\Auth\RegisterController::class, 'resetPassword'])->middleware('throttle:5,1')->name('password.update');
+Route::get('/password/forgot', [RegisterController::class, 'showForgotForm'])->name('password.forgot');
+Route::post('/password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:5,1')->name('password.email');
+Route::get('/password/reset', [RegisterController::class, 'showResetLink'])->name('ShowRestForm');
+Route::get('/password/reset/{token}', [RegisterController::class, 'showResetLink'])->name('password.reset');
+Route::post('/password/reset', [RegisterController::class, 'resetPassword'])->middleware('throttle:5,1')->name('password.update');
 
 // Protected routes that require authentication
 Route::middleware(['auth'])->group(function () {
@@ -103,12 +110,12 @@ Route::middleware(['auth'])->group(function () {
     // Search route
     Route::get('/search', function () {
         $query = request('query');
-        
+
         // If empty query, redirect back to dashboard
         if (empty($query)) {
             return redirect()->route('dashboard');
         }
-        
+
         // Placeholder search results - in a real app, this would query a database
         $results = [
             [
@@ -136,13 +143,13 @@ Route::middleware(['auth'])->group(function () {
                 'url' => '/notices/payment'
             ],
         ];
-        
+
         // Filter results based on search query
         $filteredResults = array_filter($results, function($item) use ($query) {
-            return stripos($item['title'], $query) !== false || 
+            return stripos($item['title'], $query) !== false ||
                    stripos($item['description'], $query) !== false;
         });
-        
+
         return view('search', [
             'query' => $query,
             'results' => $filteredResults
@@ -157,13 +164,13 @@ Route::post('/admin/login', [App\Http\Controllers\AdminController::class, 'login
 Route::middleware(['auth:admin', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/logout', [App\Http\Controllers\AdminController::class, 'logout'])->name('logout');
-    
+
     // User management routes
     Route::get('/users', [App\Http\Controllers\AdminController::class, 'showUsers'])->name('users');
     Route::get('/users/{id}/edit', [App\Http\Controllers\AdminController::class, 'editUser'])->name('users.edit');
     Route::put('/users/{id}', [App\Http\Controllers\AdminController::class, 'updateUser'])->name('users.update');
     Route::delete('/users/{id}', [App\Http\Controllers\AdminController::class, 'deleteUser'])->name('users.delete');
-    
+
     // New members page route
     Route::get('/members', function () {
         return view('admin.members');
