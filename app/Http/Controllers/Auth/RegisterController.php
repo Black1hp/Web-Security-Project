@@ -28,50 +28,51 @@ class RegisterController extends Controller
 
     public function doRegister(Request $request) {
     $key = 'register|' . \Str::lower($request->input('email')) . '|' . $request->ip();
-    // \Log::info('RateLimiter count', [
-    //     'key' => $key,
-    //     'attempts' => \RateLimiter::attempts($key)
-    // ]);
     if (\RateLimiter::tooManyAttempts($key, 5)) {
         return back()->withErrors(['email' => 'Too many registration attempts. Please try again in 1 minute.']);
     }
     \RateLimiter::hit($key, 60);
-        try {
-            $request->validate([
-                'name' => ['required', 'string', 'min:5'],
-                'email' => ['required', 'email', 'unique:users'],
-                'password' => ['required', 'confirmed', PasswordRule::min(8)->numbers()->letters()->mixedCase()->symbols()],
-                'cf-turnstile-response' => ['required'],
+    
+    try {
+        $request->validate([
+            'name' => ['required', 'string', 'min:5'],
+            'email' => ['required', 'email', 'unique:users'],
+            'password' => ['required', 'confirmed', PasswordRule::min(8)->numbers()->letters()->mixedCase()->symbols()],
+            'cf-turnstile-response' => ['required'],
+        ]);
+        
+        // Verify Cloudflare Turnstile
+        $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
+        
+        if (!$turnstileResponse['success']) {
+            Log::error('Turnstile verification failed', [
+                'errors' => $turnstileResponse['error-codes'] ?? 'Unknown error',
+                'ip' => $request->ip()
             ]);
-            
-            // Verify Cloudflare Turnstile
-            $turnstileResponse = $this->verifyTurnstile($request->input('cf-turnstile-response'), $request->ip());
-            
-            if (!$turnstileResponse['success']) {
-                Log::error('Turnstile verification failed', [
-                    'errors' => $turnstileResponse['error-codes'] ?? 'Unknown error',
-                    'ip' => $request->ip()
-                ]);
-                return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
-                                       ->withErrors(['captcha' => 'CAPTCHA verification failed. Please try again.']);
-            }
-            
-        } catch(\Exception $e) {
-            Log::error('Registration validation error', ['error' => $e->getMessage()]);
             return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
-                                   ->withErrors('Invalid registration information.');
+                                   ->withErrors(['captcha' => 'CAPTCHA verification failed. Please try again.']);
         }
-        $user = new User();
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = bcrypt($request->password); 
-        $user->save();
-
-        $title = "Verification Link";
-        $token = Crypt::encryptString(json_encode(['id' => $user->id, 'email' => $user->email]));
-        $link = route("verify", ['token' => $token]);
-        Mail::to($user->email)->send(new VerificationEmail($link, $user->name));
-        return redirect('/')->with('status', 'Registration successful! Please check your email to verify your account.');
+        
+    } catch(\Exception $e) {
+        Log::error('Registration validation error', ['error' => $e->getMessage()]);
+        return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
+                               ->withErrors('Invalid registration information.');
+    }
+    
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password)
+    ]);
+    
+    // Automatically log the user in
+    Auth::login($user);
+    
+    // Send the email verification notification using Laravel's built-in system
+    $user->sendEmailVerificationNotification();
+    
+    return redirect()->route('verification.notice')
+                    ->with('status', 'Registration successful! Please check your email to verify your account.');
     }
 
     public function verify(Request $request) {
