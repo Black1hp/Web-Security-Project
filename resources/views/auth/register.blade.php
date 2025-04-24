@@ -686,6 +686,13 @@
                 <div class="register-form-container">
                     <form method="POST" action="{{ route('register.post') }}" id="register-form">
                         @csrf
+                        @if (session('google_email_conflict'))
+                            <div class="alert alert-danger">
+                                <ul>
+                                    <li>{{ session('google_email_conflict') }}</li>
+                                </ul>
+                            </div>
+                        @endif
                         @if ($errors->any())
                             <div class="alert alert-danger">
                                 <ul>

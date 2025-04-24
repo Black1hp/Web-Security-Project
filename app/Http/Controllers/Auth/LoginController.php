@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
@@ -67,7 +68,7 @@ class LoginController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      */
     /**
-     * Redirect the user to the Google authentication page.
+     * Redirect the user to Google's OAuth consent screen.
      *
      * @return \Illuminate\Http\RedirectResponse
      */
@@ -77,28 +78,89 @@ class LoginController extends Controller
     }
 
     /**
-     * Obtain the user information from Google.
+     * Handle the callback from Google after OAuth consent.
      *
      * @return \Illuminate\Http\RedirectResponse
      */
     public function handleGoogleCallback()
     {
         try {
-            $googleUser = Socialite::driver('google')->stateless()->user();
-            $user = User::where('email', $googleUser->getEmail())->first();
+            // Retrieve Google user data with state validation
+            $googleUser = Socialite::driver('google')->user();
+
+            // Find user by google_id
+            $user = User::where('google_id', $googleUser->getId())->first();
+
             if (!$user) {
-                // Create a new user if not exists
+                // Check if email is already registered
+                $existingUser = User::where('email', $googleUser->getEmail())->first();
+                if ($existingUser) {
+                    Log::warning('Google login attempted with registered email', [
+                        'email' => $googleUser->getEmail(),
+                        'google_id' => $googleUser->getId(),
+                    ]);
+                    return redirect()->route('login')->withErrors([
+                        'email' => 'This email is already registered. Please link your Google account in settings or use your existing login method.',
+                    ]);
+                }
+
+                // Validate avatar URL
+                $avatar = $googleUser->getAvatar();
+                if ($avatar && !Str::startsWith($avatar, 'https://lh3.googleusercontent.com/')) {
+                    $avatar = null;
+                }
+
+                // Create new user
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $avatar,
                     'email_verified_at' => now(),
-                    'password' => bcrypt(Str::random(24)),
+                    'password' => null,
+                ]);
+
+                Log::info('New user created via Google login', [
+                    'email' => $user->email,
+                    'google_id' => $user->google_id,
+                ]);
+            } elseif ($user->email !== $googleUser->getEmail()) {
+                // Handle email mismatch (e.g., Google account email changed)
+                Log::warning('Google login email mismatch', [
+                    'user_id' => $user->id,
+                    'google_email' => $googleUser->getEmail(),
+                    'stored_email' => $user->email,
+                ]);
+                return redirect()->route('login')->withErrors([
+                    'email' => 'The email associated with this Google account has changed. Please update your account settings.',
                 ]);
             }
+
+            // Log in the user and regenerate session
             Auth::login($user, true);
+            session()->regenerate();
+
+            Log::info('User logged in via Google', [
+                'email' => $user->email,
+                'google_id' => $user->google_id,
+            ]);
+
             return redirect()->route('dashboard');
+        } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
+            Log::warning('Invalid OAuth state during Google login', [
+                'error' => $e->getMessage(),
+            ]);
+            return redirect()->route('login')->withErrors([
+                'email' => 'Invalid login attempt. Please try again.',
+            ]);
         } catch (\Exception $e) {
-            return redirect()->route('login')->withErrors(['email' => 'Google login failed.']);
+            Log::error('Google login failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return redirect()->route('login')->withErrors([
+                'email' => 'Unable to login with Google. Please try again later.',
+            ]);
         }
     }
 
