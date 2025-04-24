@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -64,6 +66,42 @@ class LoginController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
+    /**
+     * Redirect the user to the Google authentication page.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    /**
+     * Obtain the user information from Google.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->user();
+            $user = User::where('email', $googleUser->getEmail())->first();
+            if (!$user) {
+                // Create a new user if not exists
+                $user = User::create([
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'email_verified_at' => now(),
+                    'password' => bcrypt(Str::random(24)),
+                ]);
+            }
+            Auth::login($user, true);
+            return redirect()->route('dashboard');
+        } catch (\Exception $e) {
+            return redirect()->route('login')->withErrors(['email' => 'Google login failed.']);
+        }
+    }
+
     public function logout(Request $request)
     {
         if (Auth::guard('admin')->check()) {

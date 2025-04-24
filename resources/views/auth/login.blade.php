@@ -711,6 +711,10 @@
                         
                         <a href="{{ route('password.forgot') }}" class="forgot-password">Forgot Password?</a>
                         
+                        <a href="{{ route('google.login') }}" class="login-button" style="background:#fff; color:#333; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:16px;">
+                            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo" style="width:24px;height:24px;">
+                            <span style="font-weight:500;">Login with Google</span>
+                        </a>
                         <button type="submit" class="login-button">
                             <div class="button-text">Login</div>
                         </button>

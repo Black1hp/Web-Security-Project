@@ -15,5 +15,8 @@ export default defineConfig({
         hmr: {
             host: 'project.localhost.com',
         },
+        proxy: {
+            '/api': 'http://project.localhost.com',
+        },
     },
 });
