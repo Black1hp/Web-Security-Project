@@ -67,7 +67,8 @@ class RegisterController extends Controller
     
     // Automatically log the user in
     Auth::login($user);
-    
+    $user->assignRole('Student');
+
     // Send the email verification notification using Laravel's built-in system
     $user->sendEmailVerificationNotification();
     

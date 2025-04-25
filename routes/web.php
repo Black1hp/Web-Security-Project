@@ -197,3 +197,54 @@ Route::middleware(['auth:admin', 'admin'])->prefix('admin')->name('admin.')->gro
         return view('admin.members');
     })->name('members');
 });
+
+// Web Controllers Routes
+Route::prefix('web')->name('web.')->group(function () {
+    // User routes
+    Route::resource('users', \App\Http\Controllers\Web\UserController::class);
+    Route::get('users/{user}/profile', [\App\Http\Controllers\Web\UserController::class, 'profile'])->name('users.profile');
+    Route::put('users/{user}/profile', [\App\Http\Controllers\Web\UserController::class, 'updateProfile'])->name('users.profile.update');
+    
+    // Role routes
+    Route::resource('roles', \App\Http\Controllers\Web\RoleController::class);
+    Route::get('roles/{role}/permissions', [\App\Http\Controllers\Web\RoleController::class, 'permissions'])->name('roles.permissions');
+    Route::put('roles/{role}/permissions', [\App\Http\Controllers\Web\RoleController::class, 'updatePermissions'])->name('roles.permissions.update');
+    
+    // Student routes
+    Route::resource('students', \App\Http\Controllers\Web\StudentController::class);
+    Route::get('students/{student}/courses', [\App\Http\Controllers\Web\StudentController::class, 'courses'])->name('students.courses');
+    Route::get('students/{student}/grades', [\App\Http\Controllers\Web\StudentController::class, 'grades'])->name('students.grades');
+    
+    // Professor routes
+    Route::resource('professors', \App\Http\Controllers\Web\ProfessorController::class);
+    Route::get('professors/{professor}/courses', [\App\Http\Controllers\Web\ProfessorController::class, 'courses'])->name('professors.courses');
+    
+    // Teaching Assistant routes
+    Route::resource('teaching-assistants', \App\Http\Controllers\Web\TeachingAssistantController::class);
+    Route::get('teaching-assistants/{teachingAssistant}/courses', [\App\Http\Controllers\Web\TeachingAssistantController::class, 'courses'])->name('teaching-assistants.courses');
+    
+    // Admission Officer routes
+    Route::resource('admission-officers', \App\Http\Controllers\Web\AdmissionOfficerController::class);
+    Route::get('admission-officers/applications', [\App\Http\Controllers\Web\AdmissionOfficerController::class, 'applications'])->name('admission-officers.applications');
+    
+    // IT Support routes
+    Route::resource('it-support', \App\Http\Controllers\Web\ITSupportController::class);
+    Route::get('it-support/tickets', [\App\Http\Controllers\Web\ITSupportController::class, 'tickets'])->name('it-support.tickets');
+    Route::post('it-support/tickets', [\App\Http\Controllers\Web\ITSupportController::class, 'storeTicket'])->name('it-support.tickets.store');
+    
+    // Course routes
+    Route::resource('courses', \App\Http\Controllers\Web\CourseController::class);
+    Route::get('courses/{course}/students', [\App\Http\Controllers\Web\CourseController::class, 'students'])->name('courses.students');
+    Route::get('courses/{course}/grades', [\App\Http\Controllers\Web\CourseController::class, 'grades'])->name('courses.grades');
+    Route::get('courses/{course}/schedule', [\App\Http\Controllers\Web\CourseController::class, 'schedule'])->name('courses.schedule');
+    
+    // Enrollment routes
+    Route::resource('enrollments', \App\Http\Controllers\Web\EnrollmentController::class);
+    Route::post('enrollments/{enrollment}/approve', [\App\Http\Controllers\Web\EnrollmentController::class, 'approve'])->name('enrollments.approve');
+    Route::post('enrollments/{enrollment}/reject', [\App\Http\Controllers\Web\EnrollmentController::class, 'reject'])->name('enrollments.reject');
+    
+    // Grade routes
+    Route::resource('grades', \App\Http\Controllers\Web\GradeController::class);
+    Route::get('grades/statistics', [\App\Http\Controllers\Web\GradeController::class, 'statistics'])->name('grades.statistics');
+    Route::get('grades/report', [\App\Http\Controllers\Web\GradeController::class, 'report'])->name('grades.report');
+});
