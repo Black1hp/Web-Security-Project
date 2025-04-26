@@ -6,6 +6,85 @@
     <title>Login - Student Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* Social Login Styles */
+        .social-login-container {
+            margin: 10px 0 10px 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .social-login-divider {
+            position: relative;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 8px;
+            margin-top: 0px;
+        }
+        
+        .social-login-divider::before,
+        .social-login-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: calc(50% - 70px);
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .social-login-divider::before {
+            left: 0;
+        }
+        
+        .social-login-divider::after {
+            right: 0;
+        }
+        
+        .social-login-divider span {
+            display: inline-block;
+            padding: 0 15px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            background-color: var(--form-bg);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .social-login-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 0px;
+        }
+        
+        .social-login-button {
+            background: #fff;
+            color: #333;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .social-login-button.github {
+            background: #333;
+            color: #fff;
+        }
+        
+        .social-login-button:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .social-icon {
+            width: 38px;
+            height: 38px;
+        }
         :root {
             /* Light mode colors */
             --bg-color: #f6f6f6;
@@ -395,10 +474,10 @@
         .signup-container {
             display: inline-flex;
             align-items: center;
-            gap: 67px;
+            gap: 100px;
             position: absolute;
-            top: 912px;
-            left: 128px;
+            top: 925px;
+            left: 130px;
         }
         
         .signup-text {
@@ -711,10 +790,23 @@
                         
                         <a href="{{ route('password.forgot') }}" class="forgot-password">Forgot Password?</a>
                         
-                        <a href="{{ route('google.login') }}" class="login-button" style="background:#fff; color:#333; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:16px;">
-                            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo" style="width:24px;height:24px;">
-                            <span style="font-weight:500;">Login with Google</span>
-                        </a>
+                        <div class="social-login-container">
+                            <div class="social-login-divider">
+                                <span>or sign in with</span>
+                            </div>
+                            <div class="social-login-buttons">
+                                <a href="{{ route('google.login') }}" class="social-login-button" title="Sign in with Google">
+                                    <img src="{{ asset('images/Social/google.png') }}" alt="Google Logo" class="social-icon">
+                                </a>
+                                <a href="#" class="social-login-button github" title="Sign in with GitHub">
+                                    <img src="{{ asset('images/Social/github.png') }}" alt="GitHub Logo" class="social-icon">
+                                </a>
+                                <a href="#" class="social-login-button" title="Sign in with LinkedIn">
+                                    <img src="{{ asset('images/Social/linkedin.png') }}" alt="LinkedIn Logo" class="social-icon">
+                                </a>
+                            </div>
+                        </div>
+                        
                         <button type="submit" class="login-button">
                             <div class="button-text">Login</div>
                         </button>
