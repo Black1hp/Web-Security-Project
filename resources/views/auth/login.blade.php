@@ -798,7 +798,7 @@
                                 <a href="{{ route('google.login') }}" class="social-login-button" title="Sign in with Google">
                                     <img src="{{ asset('images/Social/google.png') }}" alt="Google Logo" class="social-icon">
                                 </a>
-                                <a href="#" class="social-login-button github" title="Sign in with GitHub">
+                                <a href="{{ route('github.login') }}" class="social-login-button github" title="Sign in with GitHub">
                                     <img src="{{ asset('images/Social/github.png') }}" alt="GitHub Logo" class="social-icon">
                                 </a>
                                 <a href="#" class="social-login-button" title="Sign in with LinkedIn">

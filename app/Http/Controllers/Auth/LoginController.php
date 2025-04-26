@@ -172,6 +172,106 @@ class LoginController extends Controller
         }
     }
 
+    /**
+     * Redirect the user to GitHub's OAuth consent screen.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function redirectToGithub()
+    {
+        return Socialite::driver('github')->redirect();
+    }
+
+    /**
+     * Handle the callback from GitHub after OAuth consent.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function handleGithubCallback()
+    {
+        try {
+            // Retrieve GitHub user data with state validation
+            $githubUser = Socialite::driver('github')->user();
+
+            // Find user by github_id
+            $user = User::where('github_id', $githubUser->getId())->first();
+
+            if (!$user) {
+                // Check if email is already registered
+                // Note: GitHub might not provide an email if user has set it as private
+                $email = $githubUser->getEmail() ?? null;
+                
+                if ($email) {
+                    $existingUser = User::where('email', $email)->first();
+                    if ($existingUser) {
+                        Log::warning('GitHub login attempted with registered email', [
+                            'email' => $email,
+                            'github_id' => $githubUser->getId(),
+                        ]);
+                        return redirect()->route('login')->withErrors([
+                            'email' => 'This email is already registered. Please link your GitHub account in settings or use your existing login method.',
+                        ]);
+                    }
+                }
+
+                // Create new user
+                $user = User::create([
+                    'name' => $githubUser->getName() ?? $githubUser->getNickname(),
+                    'email' => $email ?? $githubUser->getId() . '@github.noemail',
+                    'github_id' => $githubUser->getId(),
+                    'github_token' => $githubUser->token,
+                    'github_refresh_token' => $githubUser->refreshToken,
+                    'email_verified_at' => $email ? now() : null,
+                    'password' => null,
+                ]);
+
+                Log::info('New user created via GitHub login', [
+                    'email' => $user->email,
+                    'github_id' => $user->github_id,
+                ]);
+            } else {
+                // Update tokens for existing user
+                $user->update([
+                    'github_token' => $githubUser->token,
+                    'github_refresh_token' => $githubUser->refreshToken ?? $user->github_refresh_token,
+                ]);
+            }
+
+            // Log in the user and regenerate session
+            Auth::login($user, true);
+            session()->regenerate();
+
+            Log::info('User logged in via GitHub', [
+                'email' => $user->email,
+                'github_id' => $user->github_id,
+            ]);
+
+            return redirect()->route('dashboard');
+        } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
+            Log::warning('Invalid OAuth state during GitHub login', [
+                'error' => $e->getMessage(),
+            ]);
+            return redirect()->route('login')->withErrors([
+                'email' => 'Invalid login attempt. Please try again.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('GitHub login failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            // Provide more specific error message for debugging
+            $errorMessage = 'Unable to login with GitHub: ' . $e->getMessage();
+            
+            // In production, you might want to use a generic message instead
+            // $errorMessage = 'Unable to login with GitHub. Please try again later.';
+            
+            return redirect()->route('login')->withErrors([
+                'email' => $errorMessage,
+            ]);
+        }
+    }
+
     public function logout(Request $request)
     {
         if (Auth::guard('admin')->check()) {

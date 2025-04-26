@@ -41,4 +41,10 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'github' => [
+        'client_id' => env('GITHUB_CLIENT_ID', 'Ov23liNKBwk1eX1AS1ex'),
+        'client_secret' => env('GITHUB_CLIENT_SECRET', 'c53d14e57a94d2891dcf0855c5cef4b5b80428d4'),
+        'redirect' => env('GITHUB_REDIRECT_URI', 'http://project.localhost.com/auth/github/callback'),
+    ],
+
 ];
