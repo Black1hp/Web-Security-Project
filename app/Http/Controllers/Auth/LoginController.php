@@ -104,18 +104,13 @@ class LoginController extends Controller
                     ]);
                 }
 
-                // Validate avatar URL
-                $avatar = $googleUser->getAvatar();
-                if ($avatar && !Str::startsWith($avatar, 'https://lh3.googleusercontent.com/')) {
-                    $avatar = null;
-                }
-
                 // Create new user
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $avatar,
+                    'google_token' => $googleUser->token,
+                    'google_refresh_token' => $googleUser->refreshToken,
                     'email_verified_at' => now(),
                     'password' => null,
                 ]);
@@ -134,18 +129,24 @@ class LoginController extends Controller
                 return redirect()->route('login')->withErrors([
                     'email' => 'The email associated with this Google account has changed. Please update your account settings.',
                 ]);
-            }
-
-            // Log in the user and regenerate session
-            Auth::login($user, true);
-            session()->regenerate();
-
-            Log::info('User logged in via Google', [
-                'email' => $user->email,
-                'google_id' => $user->google_id,
+        } else {
+            // Update tokens for existing user
+            $user->update([
+                'google_token' => $googleUser->token,
+                'google_refresh_token' => $googleUser->refreshToken ?? $user->google_refresh_token,
             ]);
+        }
 
-            return redirect()->route('dashboard');
+        // Log in the user and regenerate session
+        Auth::login($user, true);
+        session()->regenerate();
+
+        Log::info('User logged in via Google', [
+            'email' => $user->email,
+            'google_id' => $user->google_id,
+        ]);
+
+        return redirect()->route('dashboard');
         } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
             Log::warning('Invalid OAuth state during Google login', [
                 'error' => $e->getMessage(),
@@ -158,8 +159,15 @@ class LoginController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+            
+            // Provide more specific error message for debugging
+            $errorMessage = 'Unable to login with Google: ' . $e->getMessage();
+            
+            // In production, you might want to use a generic message instead
+            // $errorMessage = 'Unable to login with Google. Please try again later.';
+            
             return redirect()->route('login')->withErrors([
-                'email' => 'Unable to login with Google. Please try again later.',
+                'email' => $errorMessage,
             ]);
         }
     }
