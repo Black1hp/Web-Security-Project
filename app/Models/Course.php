@@ -20,7 +20,6 @@ class Course extends Model
         'description',
         'credits',
         'professor_id',
-        'schedule',
     ];
 
     /**
@@ -36,19 +35,13 @@ class Course extends Model
     ];
 
     /**
-     * Get the professor that teaches the course.
+     * Get the professor for the course.
      */
     public function professor()
     {
-        return $this->belongsTo(Professor::class);
-    }
-
-    /**
-     * Get the enrollments for the course.
-     */
-    public function enrollments()
-    {
-        return $this->hasMany(Enrollment::class);
+        return $this->belongsToMany(User::class, 'course_user')
+            ->wherePivot('role_type', 'professor')
+            ->withTimestamps();
     }
 
     /**
@@ -56,7 +49,9 @@ class Course extends Model
      */
     public function students()
     {
-        return $this->belongsToMany(Student::class, 'enrollments');
+        return $this->belongsToMany(User::class, 'course_user')
+            ->wherePivot('role_type', 'student')
+            ->withTimestamps();
     }
 
     /**
@@ -65,5 +60,15 @@ class Course extends Model
     public function grades()
     {
         return $this->hasMany(Grade::class);
+    }
+
+    /**
+     * Get the teaching assistants for the course.
+     */
+    public function teachingAssistants()
+    {
+        return $this->belongsToMany(User::class, 'course_user')
+            ->wherePivot('role_type', 'teaching_assistant')
+            ->withTimestamps();
     }
 } 
