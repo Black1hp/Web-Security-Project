@@ -11,8 +11,11 @@ use Illuminate\Http\Request;
 
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    if (Auth::check()) {
+        return redirect('/dashboard');
+    }
+    return redirect('/login');
+})->name('home');
 
 
 // Student routes

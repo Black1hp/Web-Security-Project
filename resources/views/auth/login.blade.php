@@ -145,21 +145,21 @@
                             <h2 class="mb-4 fw-bold">Login</h2>
                             <p class="text-muted mb-4">Welcome back! Please enter your credentials</p>
                             
-                            @if ($errors->any())
-                                <div class="alert alert-danger">
+    @if ($errors->any())
+        <div class="alert alert-danger">
                                     <ul class="mb-0">
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
                             
-                            @if (session('status'))
-                                <div class="alert alert-success">
-                                    {{ session('status') }}
-                                </div>
-                            @endif
+    @if (session('status'))
+        <div class="alert alert-success">
+            {{ session('status') }}
+        </div>
+    @endif
                             
                             <form method="POST" action="{{ route('login.post') }}">
                                 @csrf
@@ -174,8 +174,8 @@
                                     <label for="password">Password</label>
                                     <button type="button" class="btn-toggle-password" id="togglePassword">
                                         <i class="fa-regular fa-eye-slash"></i>
-                                    </button>
-                                </div>
+                                        </button>
+                                    </div>
                                 
                                 <div class="mb-3 d-flex justify-content-end">
                                     <a href="{{ route('password.forgot') }}" class="text-decoration-none text-primary">Forgot Password?</a>
@@ -183,9 +183,9 @@
                                 
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-primary py-2">Login</button>
-                                </div>
+                            </div>
                             </form>
-                            
+                        
                             <div class="divider">
                                 <span>or sign in with</span>
                             </div>
@@ -216,8 +216,8 @@
                             <div class="text-center">
                                 <img src="{{ asset('images/boyss.png') }}" alt="Students illustration" class="illustration">
                             </div>
-                        </div>
-                    </div>
+                </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -225,7 +225,7 @@
     
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
