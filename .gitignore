@@ -1,65 +1,95 @@
-# Laravel & PHP
-/vendor/
-/node_modules/
+# Laravel specific
+/node_modules
+/public/hot
 /public/storage
 /storage/*.key
-/storage/logs/
-/storage/framework/
-/storage/app/public/
-/.phpunit.cache
-/.phpunit.result.cache
-
-# Environment & Config files
+/vendor
 .env
-.env.*
 .env.backup
 .env.production
-.env.development
-.env.testing
-*.env
-.phpactor.json
+.phpunit.result.cache
 Homestead.json
 Homestead.yaml
-
-# IDE & Editor settings
-/.idea/
-/.vscode/
-/.fleet/
-/.nova/
-/.zed/
-
-# OS/Editor/Tooling
-.DS_Store
-Thumbs.db
-*.sublime-workspace
-*.sublime-project
-
-# Composer & NPM logs
-composer.lock
+auth.json
 npm-debug.log
 yarn-error.log
-package-lock.json
+/.fleet
+/.idea
+/.vscode
 
-# Auth & API keys
-/auth.json
+# Laravel storage and logs
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/testing/*
+!/storage/framework/testing/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/app/*
+!/storage/app/.gitkeep
+!/storage/app/public/.gitkeep
 
-# Build artifacts
-/public/build/
-/public/hot/
+# Laravel built assets
+/public/build
+/public/css
+/public/js
+/public/mix-manifest.json
 
-# Backups & misc
+# Composer
+composer.phar
+
+# Frontend assets
+/node_modules
+/public/hot
+yarn-debug.log
+
+# Operating system & editor files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Security & Keys
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+
+# Cache and compiled files
+*.log
+*.cache
+*.tmp
+.sass-cache/
+.phpactor.json
+
+# Database files
+*.sqlite
+*.sqlite-journal
+*.sql
+
+# Archives & backups
+*.zip
+*.tar
+*.tar.gz
 *.bak
 *.backup
-*.sql
-*.sqlite
-*.zip
-*.tar.gz
 
-# Prevent sensitive files from leaking
-*.key
-*.pem
-*.crt
-*.p12
-*.cer
+# Miscellaneous
+phpunit.xml
+.htaccess.local
+/public/adminer.php
 
 # End of file

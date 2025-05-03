@@ -1,4 +1,6 @@
+# Disable directory listing
 Options -Indexes
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
@@ -15,13 +17,17 @@ Options -Indexes
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+    # Skip rewriting if the file or directory exists
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Redirect everything else to public/
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
-# PHP Configuration
+# PHP 7 settings
 <IfModule mod_php7.c>
     php_value upload_max_filesize 64M
     php_value post_max_size 64M
@@ -30,12 +36,9 @@ Options -Indexes
     php_value memory_limit 256M
 </IfModule>
 
-# Disable index listing
-Options -Indexes
-
-# Set default character set
+# Charset and PHP handler
 AddDefaultCharset UTF-8
 
 <IfModule mime_module>
-  AddHandler application/x-httpd-ea-php82 .php .php8 .phtml
+    AddHandler application/x-httpd-ea-php82 .php .php8 .phtml
 </IfModule>
