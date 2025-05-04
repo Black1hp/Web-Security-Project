@@ -39,6 +39,8 @@ class RegisterController extends Controller
             'email' => ['required', 'email', 'unique:users'],
             'password' => ['required', 'confirmed', PasswordRule::min(8)->numbers()->letters()->mixedCase()->symbols()],
             'cf-turnstile-response' => ['required'],
+        ], [
+            'email.unique' => 'This email is already registered. Please try logging in or use a different email.',
         ]);
         
         // Verify Cloudflare Turnstile
@@ -52,11 +54,10 @@ class RegisterController extends Controller
             return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
                                    ->withErrors(['captcha' => 'CAPTCHA verification failed. Please try again.']);
         }
-        
     } catch(\Exception $e) {
-        Log::error('Registration validation error', ['error' => $e->getMessage()]);
+        Log::error('Registration error', ['error' => $e->getMessage()]);
         return redirect()->back()->withInput($request->except('password', 'password_confirmation'))
-                               ->withErrors('Invalid registration information.');
+                               ->withErrors('An unexpected error occurred during registration.');
     }
     
     $user = User::create([

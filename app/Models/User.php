@@ -13,47 +13,53 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles;
-
+    
     /**
-     * Send the email verification notification.
-     */
-    public function sendEmailVerificationNotification()
-    {
-        $this->generateVerificationCode();
-        $this->notify(new \App\Notifications\VerificationCode(
-            $this->verification_code,
-            \Carbon\Carbon::parse($this->verification_code_expires_at)
-        ));
-    }
-
-    /**
-     * Generate a new verification code.
+     * Generate and save a verification code for the user
+     * 
+     * @return string
      */
     public function generateVerificationCode()
     {
-        $this->verification_code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $this->verification_code_expires_at = now()->addMinutes(10);
+        // Generate a random 6-digit code
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        // Save the code and set expiration time (30 minutes from now)
+        $this->verification_code = $code;
+        $this->verification_code_expires_at = now()->addMinutes(30);
         $this->save();
+        
+        return $code;
     }
-
+    
     /**
-     * Verify the user's email using a code.
+     * Verify the email with the provided code
+     * 
+     * @param string $code
+     * @return bool
+     * @throws \Exception
      */
-    public function verifyEmailWithCode(string $code)
+    public function verifyEmailWithCode($code)
     {
+        // Check if the code matches and is not expired
         if ($this->verification_code !== $code) {
-            throw new \Exception('Invalid verification code');
+            throw new \Exception('Invalid verification code.');
         }
-
-        if (now()->gt($this->verification_code_expires_at)) {
-            throw new \Exception('Verification code has expired');
+        
+        if ($this->verification_code_expires_at < now()) {
+            throw new \Exception('Verification code has expired. Please request a new one.');
         }
-
-        $this->markEmailAsVerified();
+        
+        // Mark email as verified
+        $this->email_verified_at = now();
         $this->verification_code = null;
         $this->verification_code_expires_at = null;
         $this->save();
+        
+        return true;
     }
+    
+
 
     /**
      * The attributes that are mass assignable.
@@ -65,6 +71,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'email_verified_at',
+        'verification_code',
+        'verification_code_expires_at',
         'google_id',
         'google_token',
         'google_refresh_token',
@@ -103,6 +111,10 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendEmailVerificationNotification()
     {
-        $this->notify(new CustomVerifyEmail);
+        // Generate a new verification code
+        $code = $this->generateVerificationCode();
+        
+        // Send the notification with the code
+        $this->notify(new \App\Notifications\VerificationCodeNotification($code));
     }
 }

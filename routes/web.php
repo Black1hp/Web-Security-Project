@@ -46,19 +46,17 @@ Route::get('/password/reset/{token}', [RegisterController::class, 'showResetLink
 Route::post('/password/reset', [RegisterController::class, 'resetPassword'])->middleware('throttle:5,1')->name('password.update');
 
 // Email verification routes
-Route::get('/email/verify', function () {
-    return view('auth.verify-email');
-})->middleware('auth')->name('verification.notice');
+Route::get('/email/verify', [\App\Http\Controllers\Auth\VerificationController::class, 'show'])
+    ->middleware('auth')
+    ->name('verification.notice');
 
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-    return redirect('/dashboard')->with('status', 'Your email has been verified!');
-})->middleware(['auth', 'signed'])->name('verification.verify');
+Route::post('/email/verify', [\App\Http\Controllers\Auth\VerificationController::class, 'verify'])
+    ->middleware('auth')
+    ->name('verification.verify');
 
-Route::post('/email/verification-notification', function (Request $request) {
-    $request->user()->sendEmailVerificationNotification();
-    return back()->with('status', 'Verification link sent!');
-})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+Route::post('/email/verification-notification', [\App\Http\Controllers\Auth\VerificationController::class, 'resend'])
+    ->middleware(['auth', 'throttle:6,1'])
+    ->name('verification.send');
 
 // Protected routes that require authentication
 Route::middleware(['auth', 'verified'])->group(function () {
