@@ -1,10 +1,17 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
+import { createInertiaApp } from '@inertiajs/react';
+import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
-export default function App() {
-    return (
-        <div className="text-center p-10">
-            <h1 className="text-3xl font-bold text-blue-500">Hello from React + Vite + Laravel!</h1>
-        </div>
-    );
-}
+const el = document.getElementById('app');
+const root = createRoot(el);
+
+createInertiaApp({
+    resolve: (name) => resolvePageComponent(
+        `./Pages/${name}.jsx`,
+        import.meta.glob('./Pages/**/*.jsx')
+    ),
+    setup({ el, App, props }) {
+        root.render(<App {...props} />);
+    },
+});
