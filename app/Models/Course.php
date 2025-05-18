@@ -33,6 +33,7 @@ class Course extends Model
         'meeting_days',
         'start_time',
         'end_time'
+
     ];
 
     /**
